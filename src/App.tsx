@@ -23,6 +23,7 @@ export const App: React.FC = () => {
   const [isInputDisabled, setIsInputDisabled] = useState(false);
   const [loadingTodoId, setLoadingTodoId] = useState<number | null>(null);
   const [pendingTodos, setPendingTodos] = useState<Todo[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -140,12 +141,18 @@ export const App: React.FC = () => {
   };
 
   const toggleAllTodos = async () => {
+    if (isLoading) {
+      return;
+    }
+
     const areAllCompleted = todos.every(todo => todo.completed);
     const newCompletedStatus = !areAllCompleted;
 
     const todosToUpdate = todos.filter(
       todo => todo.completed !== newCompletedStatus,
     );
+
+    setIsLoading(true);
 
     try {
       await Promise.all(
@@ -162,6 +169,8 @@ export const App: React.FC = () => {
       );
     } catch {
       setErrorMessage('Unable to update all todos');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -181,8 +190,14 @@ export const App: React.FC = () => {
   };
 
   const clearCompletedTodos = async () => {
+    if (isLoading) {
+      return;
+    }
+
     const completedTodos = todos.filter(todo => todo.completed);
     let errorOccurred = false;
+
+    setIsLoading(true);
 
     try {
       await Promise.all(
@@ -202,6 +217,7 @@ export const App: React.FC = () => {
     } catch {
       setErrorMessage('Error occurred while clearing completed todos.');
     } finally {
+      setIsLoading(false);
       if (!errorOccurred) {
         setErrorMessage(null);
       }
